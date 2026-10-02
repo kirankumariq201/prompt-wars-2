@@ -45,7 +45,7 @@ The prototype deliberately separates **observed challenge facts**, **determinist
 - P90 preparation + courier SLA calculation
 - Merchant Micro-App simulation
 - Scenario model for cancellation, repeat rate and promotion spend
-- Google Gemini Ops Copilot endpoint with server-side key handling
+- Google Gemini Ops Copilot endpoint with server-side key handling and structured JSON validation
 - Supabase-backed network status and merchant inventory events
 - Responsive, keyboard-friendly interface
 
