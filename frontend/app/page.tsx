@@ -6,7 +6,7 @@ import {
   scenarioMetrics,
   stockConfidence,
   stockDecision,
-} from "@/lib/engine";
+} from "../lib/engine";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
