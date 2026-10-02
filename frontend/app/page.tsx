@@ -10,7 +10,7 @@ import {
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-const stores = [
+const stores: StoreCandidate[] = [
   {
     storeId: "S01",
     storeName: "Sri Lakshmi Stores",
