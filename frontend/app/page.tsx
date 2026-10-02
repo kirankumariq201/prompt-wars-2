@@ -97,7 +97,30 @@ export default function Home() {
     [],
   );
 
-  const scenario = scenarioMetrics(cancel / 100, repeat / 100, promo);\n\n  async function getOpsInsight() {\n    if (!API) {\n      setInsight("Connect the backend API to enable Google Gemini Ops Copilot.");\n      return;\n    }\n    setInsightLoading(true);\n    try {\n      const response = await fetch(API + "/api/insight", {\n        method: "POST",\n        headers: { "Content-Type": "application/json" },\n        body: JSON.stringify({\n          prompt: \`NOVA CART currently has 27% repeat rate, 11% cancellation, 37-minute delivery, 5.9k monthly support tickets and ₹17L monthly promo spend. The current scenario sliders are repeat ${repeat}%, cancellation ${cancel}%, and promo ₹${promo}L. Explain the highest-priority operational signal and one measurable next action.\`,\n        }),\n      });\n      const data = await response.json();\n      setInsight(data.insight || data.error || "No insight available.");\n    } catch {\n      setInsight("AI insight is temporarily unavailable; deterministic controls remain fully operational.");\n    } finally {\n      setInsightLoading(false);\n    }\n  }
+  const scenario = scenarioMetrics(cancel / 100, repeat / 100, promo);
+
+  async function getOpsInsight() {
+    if (!API) {
+      setInsight("Connect the backend API to enable Google Gemini Ops Copilot.");
+      return;
+    }
+    setInsightLoading(true);
+    try {
+      const response = await fetch(API + "/api/insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `NOVA CART currently has 27% repeat rate, 11% cancellation, 37-minute delivery, 5.9k monthly support tickets and ₹17L monthly promo spend. The current scenario sliders are repeat ${repeat}%, cancellation ${cancel}%, and promo ₹${promo}L. Explain the highest-priority operational signal and one measurable next action.`,
+        }),
+      });
+      const data = await response.json();
+      setInsight(data.insight || data.error || "No insight available.");
+    } catch {
+      setInsight("AI insight is temporarily unavailable; deterministic controls remain fully operational.");
+    } finally {
+      setInsightLoading(false);
+    }
+  }
 
   return (
     <main>
