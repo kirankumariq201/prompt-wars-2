@@ -23,6 +23,20 @@ NOVA PLUS turns unreliable inventory and delivery signals into an operational co
 5. Feed merchant exceptions back into the reliability signal.
 6. Use Google Gemini as an optional **Ops Copilot** for evidence-grounded explanation; critical decisions remain deterministic and auditable.
 
+## Challenge evidence → product control
+
+| NOVA CART signal | NOVA PLUS control |
+|---|---|
+| 11% cancellations / 4,235 orders monthly | Reliability scoring + basket routing |
+| 35% of cancellations from unavailable inventory | Freshness/availability confidence + DELIST |
+| 27% repeat purchase rate | Reliability scenario model |
+| 37-minute average delivery | P90 preparation + courier SLA |
+| 23% of stores reject orders during busy periods | Merchant exception signals + pause workflow |
+| 39% say inventory maintenance is too much effort | Exception-first merchant micro-app |
+| 5.9k support tickets/month | Earlier inventory/SLA signals to reduce avoidable failures |
+
+The prototype deliberately separates **observed challenge facts**, **deterministic operational decisions**, and **directional scenario assumptions**. It does not claim that modeled revenue is causal ROI.
+
 ## Functional MVP
 
 - Reliability Control Tower
