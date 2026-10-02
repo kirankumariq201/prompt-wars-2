@@ -52,9 +52,24 @@ export default function Home() {
   const [live, setLive] = useState<{
     merchants: number;
     inventory: number;
+    merchantId?: string;
+    skuId?: string;
   } | null>(null);
   const [insight, setInsight] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
+  const [eventStatus, setEventStatus] = useState("");
+  const [eventLoading, setEventLoading] = useState(false);
+  const [assignment, setAssignment] = useState(() =>
+    dispatchBasket(
+      [
+        { sku: "milk-1l", qty: 1 },
+        { sku: "bread", qty: 1 },
+        { sku: "notebook", qty: 1 },
+      ],
+      stores,
+    ),
+  );
+  const [optimizeLoading, setOptimizeLoading] = useState(false);
 
   useEffect(() => {
     if (!API) return;
@@ -66,6 +81,8 @@ export default function Home() {
           setLive({
             merchants: d.merchants.length,
             inventory: d.inventory.length,
+            merchantId: d.merchants[0]?.id,
+            skuId: d.inventory[0]?.sku_id,
           });
         }
       })
@@ -86,20 +103,82 @@ export default function Home() {
 
   const decision = stockDecision(confidence, stock);
 
-  const assignment = useMemo(
-    () =>
-      dispatchBasket(
-        [
-          { sku: "milk-1l", qty: 1 },
-          { sku: "bread", qty: 1 },
-          { sku: "notebook", qty: 1 },
-        ],
-        stores,
-      ),
-    [],
-  );
-
   const scenario = scenarioMetrics(cancel / 100, repeat / 100, promo);
+
+  async function recordInventoryEvent(
+    eventType: "SYNC" | "SOLD_OUT" | "RESTOCK" | "VERIFY",
+  ) {
+    if (!API || !live?.merchantId) {
+      setEventStatus("Connect the live backend to send merchant signals.");
+      return;
+    }
+
+    setEventLoading(true);
+    setEventStatus("");
+    try {
+      const response = await fetch(API + "/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          merchant_id: live.merchantId,
+          sku_id: live.skuId ?? null,
+          event_type: eventType,
+          quantity: eventType === "RESTOCK" ? 1 : null,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Could not record merchant signal");
+      }
+      setEventStatus("Merchant signal recorded: " + eventType + ".");
+    } catch (error) {
+      setEventStatus(
+        error instanceof Error
+          ? error.message
+          : "Merchant signal is temporarily unavailable.",
+      );
+    } finally {
+      setEventLoading(false);
+    }
+  }
+
+  async function optimizeFulfillment() {
+    if (!API) {
+      setEventStatus("Connect the backend API to run the fulfillment simulation.");
+      return;
+    }
+
+    setOptimizeLoading(true);
+    try {
+      const response = await fetch(API + "/api/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          basket: [
+            { sku: "milk-1l", qty: 1 },
+            { sku: "bread", qty: 1 },
+            { sku: "notebook", qty: 1 },
+          ],
+          stores,
+          cancellationRate: cancel / 100,
+          repeatRate: repeat / 100,
+          promoSpendLakh: promo,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.assignment) {
+        throw new Error(data.error || "Fulfillment simulation unavailable");
+      }
+      setAssignment(data.assignment);
+      setEventStatus("Backend fulfillment simulation refreshed.");
+    } catch {
+      setEventStatus(
+        "Simulation refresh failed; the local deterministic result remains available.",
+      );
+    } finally {
+      setOptimizeLoading(false);
+    }
+  }
 
   async function getOpsInsight() {
     if (!API) {
@@ -161,7 +240,7 @@ export default function Home() {
         </aside>
       </section>
 
-      <nav aria-label="Primary product views">
+      <nav aria-label="Primary product views" role="tablist">
         {[
           ["control", "Control Tower"],
           ["merchant", "Merchant Micro-App"],
@@ -170,6 +249,8 @@ export default function Home() {
           <button
             key={id}
             className={tab === id ? "sel" : ""}
+            role="tab"
+            aria-selected={tab === id}
             onClick={() => setTab(id)}
           >
             {label}
@@ -219,7 +300,7 @@ export default function Home() {
             <small>Directional stress test; not a causal CAC calculation.</small>
           </Card>
 
-          <Card title="Ops Copilot" kicker="GOOGLE AI ASSIST"><p>Use Gemini to explain the current reliability signal without changing the deterministic decision engine.</p><button className="accept" onClick={getOpsInsight} disabled={insightLoading}>{insightLoading ? "ANALYZING…" : "EXPLAIN WITH GOOGLE AI"}</button>{insight && <p className="reason" role="status">{insight}</p>}</Card><Card title="Predictive throttling" kicker="INVENTORY CONFIDENCE">
+          <Card title="Ops Copilot" kicker="GOOGLE AI ASSIST"><p>Use Gemini to explain the current reliability signal without changing the deterministic decision engine.</p><button className="accept" onClick={getOpsInsight} disabled={insightLoading} aria-busy={insightLoading}>{insightLoading ? "ANALYZING…" : "EXPLAIN WITH GOOGLE AI"}</button>{insight && <p className="reason" role="status">{insight}</p>}</Card><Card title="Predictive throttling" kicker="INVENTORY CONFIDENCE">
             <label htmlFor="stock-range">
               Stock <output>{stock}</output>
               <input
@@ -319,18 +400,33 @@ export default function Home() {
             {["Milk 1L", "Bread 400g", "Eggs 6-pack"].map((x, i) => (
               <div className="item" key={x}>
                 {x}
-                <button onClick={() => setBusy(true)}>
+                <button
+                  aria-label={i === 2 ? "Report item unavailable" : "Confirm " + x}
+                  onClick={() => {
+                    void recordInventoryEvent(i === 2 ? "SOLD_OUT" : "SYNC");
+                    setBusy(true);
+                  }}
+                  disabled={eventLoading}
+                >
                   {busy && i === 2 ? "OUT" : "✓"}
                 </button>
               </div>
             ))}
-            <button className="accept" onClick={() => setBusy(true)}>
+            <button
+              className="accept"
+              onClick={() => {
+                void recordInventoryEvent("SYNC");
+                setBusy(true);
+              }}
+              disabled={eventLoading}
+            >
               {busy ? "ORDER UPDATED ✓" : "ACCEPT ORDER"}
             </button>
             <button className="pause" onClick={() => setBusy(!busy)}>
               {busy ? "RESUME" : "PAUSE 15 MIN"}
             </button>
             <small className="offline">● Offline-safe queue enabled</small>
+          {eventStatus && <p className="reason" role="status">{eventStatus}</p>}
           </div>
 
           <div>
@@ -356,8 +452,13 @@ export default function Home() {
                 <b>1</b>
               </div>
             ))}
-            <button className="accept" onClick={() => setBusy(!busy)}>
-              {busy ? "ROUTE REFRESHED ✓" : "OPTIMIZE FULFILLMENT"}
+            <button
+              className="accept"
+              onClick={() => void optimizeFulfillment()}
+              disabled={optimizeLoading}
+              aria-busy={optimizeLoading}
+            >
+              {optimizeLoading ? "OPTIMIZING…" : "OPTIMIZE FULFILLMENT"}
             </button>
           </Card>
 
