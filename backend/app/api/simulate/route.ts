@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dispatchBasket, scenarioMetrics, stockConfidence, stockDecision } from "@/lib/engine";
 import { corsHeaders } from "@/lib/cors";
+import { isRecord, parseNumber } from "@/lib/validation";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -8,7 +9,9 @@ export async function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const raw: unknown = await req.json();
+    if (!isRecord(raw)) return NextResponse.json({ error: "A JSON object is required" }, { status: 400, headers: corsHeaders() });
+    const body = raw;
     const stock = body.stock ?? {
       onHand: 4,
       ageHours: 7,
@@ -53,9 +56,9 @@ export async function POST(req: Request) {
         decision,
         assignment,
         scenario: scenarioMetrics(
-          body.cancellationRate ?? 0.06,
-          body.repeatRate ?? 0.36,
-          body.promoSpendLakh ?? 14
+          parseNumber(body.cancellationRate, 0.06, 0, 1),
+          parseNumber(body.repeatRate, 0.36, 0, 1),
+          parseNumber(body.promoSpendLakh, 14, 0, 1000)
         )
       },
       { headers: corsHeaders() }
