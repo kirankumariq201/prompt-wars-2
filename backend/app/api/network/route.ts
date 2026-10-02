@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseFetch } from "@/lib/supabase";
 import { corsHeaders } from "@/lib/cors";
+import { isRecord, validEvent } from "@/lib/validation";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -28,24 +29,23 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const allowed = ["SYNC", "SOLD_OUT", "RESTOCK", "VERIFY"];
-
-    if (!body.merchant_id || !allowed.includes(body.event_type)) {
-      return NextResponse.json(
-        { error: "merchant_id and a valid event_type are required" },
-        { status: 400, headers: corsHeaders() }
-      );
+    const body: unknown = await request.json();
+    if (!isRecord(body)) {
+      return NextResponse.json({ error: "A JSON object is required" }, { status: 400, headers: corsHeaders() });
+    }
+    const event = validEvent(body);
+    if (!event.merchantId || !event.eventType || !event.quantityValid) {
+      return NextResponse.json({ error: "Valid merchant_id, event_type and quantity are required" }, { status: 400, headers: corsHeaders() });
     }
 
     const response = await supabaseFetch("inventory_events", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify({
-        merchant_id: body.merchant_id,
-        sku_id: body.sku_id ?? null,
-        event_type: body.event_type,
-        quantity: body.quantity ?? null,
+        merchant_id: event.merchantId,
+        sku_id: event.skuId,
+        event_type: event.eventType,
+        quantity: event.quantity,
         source: "merchant_pwa"
       })
     });
