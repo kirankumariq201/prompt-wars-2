@@ -1,4 +1,6 @@
 import {NextResponse} from "next/server";
+const cors={"Access-Control-Allow-Origin":process.env.FRONTEND_ORIGIN??"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"};
+export function OPTIONS(){return new NextResponse(null,{status:204,headers:cors});}
 import {dispatchBasket,scenarioMetrics,stockConfidence,stockDecision} from "@/lib/engine";
 import {corsHeaders} from "@/lib/cors";
 export async function OPTIONS(){return new NextResponse(null,{status:204,headers:corsHeaders()})}
