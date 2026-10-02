@@ -26,6 +26,13 @@ describe("NOVA PLUS API contracts", () => {
       quantity: 4,
     });
     expect(invalid.eventType).toBeNull();
+
+    const decimal = validEvent({
+      merchant_id: "merchant-1",
+      event_type: "RESTOCK",
+      quantity: 1.5,
+    });
+    expect(decimal.quantityValid).toBe(false);
   });
 
   it("keeps reliability decisions deterministic", () => {
