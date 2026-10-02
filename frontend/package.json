@@ -1,5 +1,5 @@
 {
-  "name": "nova-pulse-frontend",
+  "name": "nova-plus-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -19,5 +19,8 @@
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
