@@ -53,6 +53,8 @@ export default function Home() {
     merchants: number;
     inventory: number;
   } | null>(null);
+  const [insight, setInsight] = useState("");
+  const [insightLoading, setInsightLoading] = useState(false);
 
   useEffect(() => {
     if (!API) return;
