@@ -6,6 +6,7 @@ import {
   scenarioMetrics,
   stockConfidence,
   stockDecision,
+  type StoreCandidate,
 } from "../lib/engine";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
