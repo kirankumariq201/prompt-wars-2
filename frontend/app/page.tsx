@@ -97,7 +97,7 @@ export default function Home() {
     [],
   );
 
-  const scenario = scenarioMetrics(cancel / 100, repeat / 100, promo);
+  const scenario = scenarioMetrics(cancel / 100, repeat / 100, promo);\n\n  async function getOpsInsight() {\n    if (!API) {\n      setInsight("Connect the backend API to enable Google Gemini Ops Copilot.");\n      return;\n    }\n    setInsightLoading(true);\n    try {\n      const response = await fetch(API + "/api/insight", {\n        method: "POST",\n        headers: { "Content-Type": "application/json" },\n        body: JSON.stringify({\n          prompt: \`NOVA CART currently has 27% repeat rate, 11% cancellation, 37-minute delivery, 5.9k monthly support tickets and ₹17L monthly promo spend. The current scenario sliders are repeat ${repeat}%, cancellation ${cancel}%, and promo ₹${promo}L. Explain the highest-priority operational signal and one measurable next action.\`,\n        }),\n      });\n      const data = await response.json();\n      setInsight(data.insight || data.error || "No insight available.");\n    } catch {\n      setInsight("AI insight is temporarily unavailable; deterministic controls remain fully operational.");\n    } finally {\n      setInsightLoading(false);\n    }\n  }
 
   return (
     <main>
@@ -136,7 +136,7 @@ export default function Home() {
         </aside>
       </section>
 
-      <nav>
+      <nav aria-label="Primary product views">
         {[
           ["control", "Control Tower"],
           ["merchant", "Merchant Micro-App"],
@@ -194,7 +194,7 @@ export default function Home() {
             <small>Directional stress test; not a causal CAC calculation.</small>
           </Card>
 
-          <Card title="Predictive throttling" kicker="INVENTORY CONFIDENCE">
+          <Card title="Ops Copilot" kicker="GOOGLE AI ASSIST"><p>Use Gemini to explain the current reliability signal without changing the deterministic decision engine.</p><button className="accept" onClick={getOpsInsight} disabled={insightLoading}>{insightLoading ? "ANALYZING…" : "EXPLAIN WITH GOOGLE AI"}</button>{insight && <p className="reason" role="status">{insight}</p>}</Card><Card title="Predictive throttling" kicker="INVENTORY CONFIDENCE">
             <label>
               Stock <output>{stock}</output>
               <input
