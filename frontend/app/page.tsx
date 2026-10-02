@@ -220,9 +220,11 @@ export default function Home() {
           </Card>
 
           <Card title="Ops Copilot" kicker="GOOGLE AI ASSIST"><p>Use Gemini to explain the current reliability signal without changing the deterministic decision engine.</p><button className="accept" onClick={getOpsInsight} disabled={insightLoading}>{insightLoading ? "ANALYZING…" : "EXPLAIN WITH GOOGLE AI"}</button>{insight && <p className="reason" role="status">{insight}</p>}</Card><Card title="Predictive throttling" kicker="INVENTORY CONFIDENCE">
-            <label>
+            <label htmlFor="stock-range">
               Stock <output>{stock}</output>
               <input
+                id="stock-range"
+                aria-label="Stock on hand"
                 type="range"
                 min="0"
                 max="12"
@@ -230,9 +232,11 @@ export default function Home() {
                 onChange={(e) => setStock(+e.target.value)}
               />
             </label>
-            <label>
+            <label htmlFor="sync-range">
               Hours since sync <output>{age}h</output>
               <input
+                id="sync-range"
+                aria-label="Hours since inventory synchronization"
                 type="range"
                 min="0"
                 max="48"
