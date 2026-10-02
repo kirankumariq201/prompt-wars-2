@@ -1,0 +1,1 @@
+export default function Page(){return <main style={{fontFamily:"system-ui",padding:40}}><h1>NOVA PULSE API</h1><p>Backend service is online.</p><p>Endpoints: /api/network and /api/simulate</p></main>}
